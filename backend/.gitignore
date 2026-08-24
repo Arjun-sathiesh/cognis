@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+cognis.db
+__pycache__/
+*.py[cod]
