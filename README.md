@@ -283,4 +283,4 @@ The following work is still recommended before production use:
 11. Add semantic/vector retrieval alongside keyword search.
 12. Add Playwright end-to-end workflow tests.
 
-For the detailed status and roadmap, see [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+For the detailed status and roadmap, see [documentation/IMPLEMENTATION_PLAN.md](documentation/IMPLEMENTATION_PLAN.md).
