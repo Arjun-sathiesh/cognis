@@ -411,7 +411,10 @@ export const AssistantPage: React.FC<AssistantPageProps> = ({
                   <p className="text-sm leading-relaxed">{msg.content}</p>
                 ) : (
                   <div className="prose-dark text-xs space-y-2">
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    <ReactMarkdown>
+                      {msg.content?.trim() ||
+                        "No relevant knowledge was found for this question."}
+                    </ReactMarkdown>
                   </div>
                 )}
 
@@ -434,7 +437,7 @@ export const AssistantPage: React.FC<AssistantPageProps> = ({
                             title={src.excerpt}
                           >
                             <span className="text-[10px] uppercase font-bold text-gray-400">
-                              [{src.source}]
+                              Document: {src.source}
                             </span>
                             <span className="font-medium group-hover:text-white">
                               {src.title}
