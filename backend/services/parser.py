@@ -22,8 +22,8 @@ def parse_uploaded_file(filename: str, file_bytes: bytes) -> str:
             extracted_text = []
             for page_idx, page in enumerate(reader.pages):
                 page_text = page.extract_text()
-                if page_text:
-                    extracted_text.append(f"--- Page {page_idx + 1} ---\n{page_text}")
+                if page_text and page_text.strip():
+                    extracted_text.append(f"--- Page {page_idx + 1} ---\n{page_text.strip()}")
             return "\n\n".join(extracted_text)
             
         elif ext in ["docx", "doc"]:

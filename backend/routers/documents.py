@@ -7,6 +7,9 @@ from services.parser import parse_uploaded_file
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
+SUPPORTED_EXTENSIONS = {"md", "txt", "json", "yaml", "yml", "pdf", "docx"}
+MAX_FILE_SIZE = 10 * 1024 * 1024
+
 @router.get("/project/{project_id}")
 def get_project_documents(project_id: int, db: Session = Depends(get_db)):
     docs = db.query(Document).filter(Document.project_id == project_id).order_by(Document.created_at.desc()).all()
@@ -29,9 +32,20 @@ async def upload_document(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    file_bytes = await file.read()
     filename = file.filename or "document.txt"
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if extension not in SUPPORTED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Unsupported document type")
+
+    file_bytes = await file.read()
+    if not file_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+    if len(file_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File size must be less than 10 MB")
+
     content_text = parse_uploaded_file(filename, file_bytes)
+    if not content_text.strip():
+        raise HTTPException(status_code=400, detail="Uploaded file has no extractable content")
 
     doc = Document(
         project_id=project.id,
