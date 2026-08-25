@@ -35,13 +35,16 @@ def list_knowledge(
             query = query.filter(KnowledgeItem.category == cat_lower)
 
     if search and search.strip():
-        term = f"%{search.strip()}%"
-        query = query.filter(
-            (KnowledgeItem.title.ilike(term)) |
-            (KnowledgeItem.content.ilike(term)) |
-            (KnowledgeItem.rationale_or_solution.ilike(term)) |
-            (KnowledgeItem.source.ilike(term))
-        )
+        terms = [t.strip() for t in search.strip().split() if t.strip()]
+        for t in terms:
+            term_pat = f"%{t}%"
+            query = query.filter(
+                (KnowledgeItem.title.ilike(term_pat)) |
+                (KnowledgeItem.content.ilike(term_pat)) |
+                (KnowledgeItem.rationale_or_solution.ilike(term_pat)) |
+                (KnowledgeItem.source.ilike(term_pat)) |
+                (KnowledgeItem.category.ilike(term_pat))
+            )
 
     items = query.order_by(KnowledgeItem.created_at.desc()).all()
     
