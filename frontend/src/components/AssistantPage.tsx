@@ -434,7 +434,7 @@ export const AssistantPage: React.FC<AssistantPageProps> = ({
                             title={src.excerpt}
                           >
                             <span className="text-[10px] uppercase font-bold text-gray-400">
-                              [{src.source}]
+                              Document: {src.source}
                             </span>
                             <span className="font-medium group-hover:text-white">
                               {src.title}
