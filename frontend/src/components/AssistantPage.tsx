@@ -411,7 +411,10 @@ export const AssistantPage: React.FC<AssistantPageProps> = ({
                   <p className="text-sm leading-relaxed">{msg.content}</p>
                 ) : (
                   <div className="prose-dark text-xs space-y-2">
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    <ReactMarkdown>
+                      {msg.content?.trim() ||
+                        "No relevant knowledge was found for this question."}
+                    </ReactMarkdown>
                   </div>
                 )}
 
