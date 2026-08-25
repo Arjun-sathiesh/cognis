@@ -37,11 +37,20 @@ async def upload_document(
     if extension not in SUPPORTED_EXTENSIONS:
         raise HTTPException(status_code=400, detail="Unsupported document type")
 
-    file_bytes = await file.read()
-    if not file_bytes:
+    file_buffer = bytearray()
+    chunk_size = 1024 * 1024
+    while True:
+        chunk = await file.read(chunk_size)
+        if not chunk:
+            break
+        file_buffer.extend(chunk)
+        if len(file_buffer) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail="File size must be less than 10 MB")
+
+    if not file_buffer:
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
-    if len(file_bytes) > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File size must be less than 10 MB")
+
+    file_bytes = bytes(file_buffer)
 
     content_text = parse_uploaded_file(filename, file_bytes)
     if not content_text.strip():
