@@ -46,7 +46,7 @@ export const FeedbackPage: React.FC = () => {
             <span>Helpfulness Rate</span>
             <TrendingUp className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-bold text-emerald-400">{stats?.helpfulness_rate || 100}%</div>
+          <div className="text-2xl font-bold text-emerald-400">{stats?.helpfulness_rate ?? 0}%</div>
           <p className="text-[11px] text-gray-500">Positive engineer feedback</p>
         </div>
 
