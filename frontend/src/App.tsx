@@ -151,6 +151,7 @@ export const App: React.FC = () => {
             <KnowledgeBasePage
               onInspectItem={(item) => setInspectKnowledgeItem(item)}
               onAskAboutItem={handleAskAboutItem}
+              onSeedSample={handleSeedSample}
             />
           )}
 
