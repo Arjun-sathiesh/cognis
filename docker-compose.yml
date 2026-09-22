@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: ./backend
+    container_name: cognis-backend-container
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV=production
+    volumes:
+      - backend_data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: cognis-frontend-container
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  backend_data:
