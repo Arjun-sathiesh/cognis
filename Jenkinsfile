@@ -13,7 +13,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Preparing Cognis application...'
-                sh 'echo "Build preparation completed"'
+                bat 'echo Build preparation completed'
             }
         }
 
@@ -21,14 +21,14 @@ pipeline {
             steps {
                 echo 'Validating Cognis backend...'
 
-                sh '''
+                bat '''
                     cd backend
-                    python3 -m compileall -q .
+                    python -m compileall -q .
                 '''
 
                 echo 'Validating Cognis frontend...'
 
-                sh '''
+                bat '''
                     cd frontend
                     npm install
                     npm run build
@@ -40,11 +40,11 @@ pipeline {
             steps {
                 echo "Building Cognis Docker images for Jenkins build #${BUILD_NUMBER}..."
 
-                sh "docker build -t cognis-backend:jenkins-${BUILD_NUMBER} ./backend"
+                bat "docker build -t cognis-backend:jenkins-${BUILD_NUMBER} ./backend"
 
-                sh "docker build -t cognis-frontend:jenkins-${BUILD_NUMBER} ./frontend"
+                bat "docker build -t cognis-frontend:jenkins-${BUILD_NUMBER} ./frontend"
 
-                sh 'docker images | grep cognis'
+                bat 'docker images | findstr cognis'
             }
         }
     }
