@@ -19,12 +19,14 @@ pipeline {
 
         stage('Test/Validate') {
             steps {
-                echo 'Validating Cognis backend and frontend...'
+                echo 'Validating Cognis backend...'
 
                 sh '''
                     cd backend
-                    python -m compileall -q .
+                    python3 -m compileall -q .
                 '''
+
+                echo 'Validating Cognis frontend...'
 
                 sh '''
                     cd frontend
@@ -36,19 +38,19 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                echo 'Building Cognis Docker images...'
+                echo "Building Cognis Docker images for Jenkins build #${BUILD_NUMBER}..."
 
-                sh 'docker compose build'
+                sh "docker build -t cognis-backend:jenkins-${BUILD_NUMBER} ./backend"
 
-                sh '''
-                    docker tag cognis-backend:latest cognis-backend:jenkins-${BUILD_NUMBER} || true
-                    docker tag cognis-frontend:latest cognis-frontend:jenkins-${BUILD_NUMBER} || true
-                '''
+                sh "docker build -t cognis-frontend:jenkins-${BUILD_NUMBER} ./frontend"
+
+                sh 'docker images | grep cognis'
             }
         }
     }
 
     post {
+
         success {
             echo "Cognis CI Pipeline completed successfully - Build #${BUILD_NUMBER}"
         }
