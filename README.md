@@ -284,3 +284,7 @@ The following work is still recommended before production use:
 12. Add Playwright end-to-end workflow tests.
 
 For the detailed status and roadmap, see [documentation/IMPLEMENTATION_PLAN.md](documentation/IMPLEMENTATION_PLAN.md).
+
+
+## Jenkins CI
+This project uses Jenkins to automatically validate the application and build Docker images.
