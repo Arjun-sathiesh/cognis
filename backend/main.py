@@ -40,6 +40,7 @@ app.include_router(stats.router)
 app.include_router(sample_data.router)
 app.include_router(settings.router)
 
+
 @app.on_event("startup")
 def startup_event():
     # Automatically seed FinTrack sample project if database has 0 projects
@@ -55,13 +56,16 @@ def startup_event():
     finally:
         db.close()
 
+
 @app.get("/api/health")
 def health_check():
     return {
         "status": "healthy",
         "service": "Cognis Organizational Intelligence API",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "ci": "Jenkins"
     }
+
 
 if __name__ == "__main__":
     import uvicorn
