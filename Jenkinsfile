@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -17,7 +18,6 @@ pipeline {
             }
         }
 
-       
         stage('Test/Validate') {
             steps {
                 echo 'Installing backend dependencies and running tests...'
@@ -39,7 +39,6 @@ pipeline {
             }
         }
 
-
         stage('Docker Build') {
             steps {
                 echo "Building Cognis Docker images for Jenkins build #${BUILD_NUMBER}..."
@@ -51,62 +50,84 @@ pipeline {
                 bat 'docker images | findstr cognis'
             }
         }
-        
-stage('Verify Docker Hub Credential') {
-    steps {
-        withCredentials([usernamePassword(
-            credentialsId: 'dockerhub-creds-v2',
-            usernameVariable: 'DOCKERHUB_USER',
-            passwordVariable: 'DOCKERHUB_TOKEN'
-        )]) {
-            powershell '''
-                if ($env:DOCKERHUB_USER -ne "arjun1110") {
-                    Write-Error "Unexpected Docker Hub username"
-                    exit 1
-                }
 
-                if ([string]::IsNullOrWhiteSpace($env:DOCKERHUB_TOKEN)) {
-                    Write-Error "Docker Hub token is empty"
-                    exit 1
-                }
+        stage('Verify Docker Hub Credential') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds-v2',
+                        usernameVariable: 'DOCKERHUB_USER',
+                        passwordVariable: 'DOCKERHUB_TOKEN'
+                    )
+                ]) {
+                    powershell '''
+                        $ErrorActionPreference = "Stop"
 
-                Write-Output "Username matches expected value"
-                Write-Output "Token is present; length: $($env:DOCKERHUB_TOKEN.Length)"
-            '''
+                        if ($env:DOCKERHUB_USER -ne "arjun1110") {
+                            throw "Unexpected Docker Hub username"
+                        }
+
+                        if ([string]::IsNullOrWhiteSpace($env:DOCKERHUB_TOKEN)) {
+                            throw "Docker Hub token is empty"
+                        }
+
+                        Write-Output "Username matches expected value"
+                        Write-Output "Docker Hub token is present"
+                    '''
+                }
+            }
         }
-    }
-}
 
-    
         stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds-v2',
-                    usernameVariable: 'DOCKERHUB_USER',
-                    passwordVariable: 'DOCKERHUB_TOKEN'
-                )]) {
-                   powershell '''
-                $env:DOCKERHUB_TOKEN | docker login -u $env:DOCKERHUB_USER --password-stdin
-                if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-                '''
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds-v2',
+                        usernameVariable: 'DOCKERHUB_USER',
+                        passwordVariable: 'DOCKERHUB_TOKEN'
+                    )
+                ]) {
+                    script {
+                        try {
+                            powershell '''
+                                $ErrorActionPreference = "Stop"
 
-                    bat '''
-                        docker tag cognis-backend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
-                        docker tag cognis-frontend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
+                                $env:DOCKERHUB_TOKEN |
+                                    docker login `
+                                        --username $env:DOCKERHUB_USER `
+                                        --password-stdin
 
-                        docker push %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
-                        docker push %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
+                                if ($LASTEXITCODE -ne 0) {
+                                    throw "Docker Hub login failed with exit code $LASTEXITCODE"
+                                }
 
-                        docker logout
-                    '''
+                                Write-Output "Docker Hub login succeeded"
+                            '''
+
+                            bat '''
+                                docker tag cognis-backend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
+                                if errorlevel 1 exit /b 1
+
+                                docker tag cognis-frontend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
+                                if errorlevel 1 exit /b 1
+
+                                docker push %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
+                                if errorlevel 1 exit /b 1
+
+                                docker push %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
+                                if errorlevel 1 exit /b 1
+                            '''
+                        }
+                        finally {
+                            bat 'docker logout'
+                        }
+                    }
                 }
             }
         }
     }
 
-
     post {
-
         success {
             echo "Cognis CI Pipeline completed successfully - Build #${BUILD_NUMBER}"
         }
