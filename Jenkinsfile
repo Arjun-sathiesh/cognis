@@ -51,7 +51,7 @@ pipeline {
                 bat 'docker images | findstr cognis'
             }
         }
-    }
+    
 
     
         stage('Push to Docker Hub') {
