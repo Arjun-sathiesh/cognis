@@ -55,7 +55,7 @@ pipeline {
 stage('Verify Docker Hub Credential') {
     steps {
         withCredentials([usernamePassword(
-            credentialsId: 'dockerhub-creds',
+            credentialsId: 'dockerhub-creds-v2',
             usernameVariable: 'DOCKERHUB_USER',
             passwordVariable: 'DOCKERHUB_TOKEN'
         )]) {
@@ -81,7 +81,7 @@ stage('Verify Docker Hub Credential') {
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
+                    credentialsId: 'dockerhub-creds-v2',
                     usernameVariable: 'DOCKERHUB_USER',
                     passwordVariable: 'DOCKERHUB_TOKEN'
                 )]) {
