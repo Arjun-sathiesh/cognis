@@ -17,12 +17,15 @@ pipeline {
             }
         }
 
+       
         stage('Test/Validate') {
             steps {
-                echo 'Validating Cognis backend...'
+                echo 'Installing backend dependencies and running tests...'
 
                 bat '''
                     cd backend
+                    python -m pip install -r requirements.txt
+                    python -m pytest ../testcases/api/test_extractor.py -v
                     python -m compileall -q .
                 '''
 
@@ -35,6 +38,7 @@ pipeline {
                 '''
             }
         }
+
 
         stage('Docker Build') {
             steps {
