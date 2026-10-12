@@ -83,48 +83,48 @@ pipeline {
                 }
             }
         }
+stage('Push to Docker Hub') {
+    steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'dockerhub-creds-v2',
+                usernameVariable: 'DOCKERHUB_USER',
+                passwordVariable: 'DOCKERHUB_TOKEN'
+            )
+        ]) {
+            script {
+                try {
+                    bat '''
+                        @echo off
+                        echo Authenticating with Docker Hub...
 
-        stage('Push to Docker Hub') {
-            steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-creds-v2',
-                        usernameVariable: 'DOCKERHUB_USER',
-                        passwordVariable: 'DOCKERHUB_TOKEN'
-                    )
-                ]) {
-                    try {
-                        bat '''
-                            @echo off
-                            echo Authenticating with Docker Hub...
+                        powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$env:DOCKERHUB_TOKEN | docker login --username $env:DOCKERHUB_USER --password-stdin; if ($LASTEXITCODE -ne 0) { exit 1 }; Write-Output 'Docker Hub authentication succeeded'; exit 0"
 
-                            powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$env:DOCKERHUB_TOKEN | docker login --username $env:DOCKERHUB_USER --password-stdin; if ($LASTEXITCODE -ne 0) { exit 1 }; Write-Output 'Docker Hub authentication succeeded'; exit 0"
+                        if errorlevel 1 exit /b 1
 
-                            if errorlevel 1 exit /b 1
+                        echo Tagging Docker images...
 
-                            echo Tagging Docker images...
+                        docker tag cognis-backend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
+                        if errorlevel 1 exit /b 1
 
-                            docker tag cognis-backend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
-                            if errorlevel 1 exit /b 1
+                        docker tag cognis-frontend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
+                        if errorlevel 1 exit /b 1
 
-                            docker tag cognis-frontend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
-                            if errorlevel 1 exit /b 1
+                        echo Pushing backend image...
+                        docker push %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
+                        if errorlevel 1 exit /b 1
 
-                            echo Pushing backend image...
-                            docker push %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
-                            if errorlevel 1 exit /b 1
-
-                            echo Pushing frontend image...
-                            docker push %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
-                            if errorlevel 1 exit /b 1
-                        '''
-                    } finally {
-                        bat 'docker logout'
-                    }
+                        echo Pushing frontend image...
+                        docker push %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
+                        if errorlevel 1 exit /b 1
+                    '''
+                } finally {
+                    bat 'docker logout'
                 }
             }
         }
     }
+}
 
     post {
         success {
