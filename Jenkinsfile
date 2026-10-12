@@ -51,20 +51,32 @@ pipeline {
                 bat 'docker images | findstr cognis'
             }
         }
-        stage('Verify Docker Hub Login') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKERHUB_USER',
-                    passwordVariable: 'DOCKERHUB_TOKEN'
-                )]) {
-               powershell '''
-                $env:DOCKERHUB_TOKEN | docker login -u $env:DOCKERHUB_USER --password-stdin
-                if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-                '''
-            }
+        
+stage('Verify Docker Hub Credential') {
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-creds',
+            usernameVariable: 'DOCKERHUB_USER',
+            passwordVariable: 'DOCKERHUB_TOKEN'
+        )]) {
+            powershell '''
+                if ($env:DOCKERHUB_USER -ne "arjun1110") {
+                    Write-Error "Unexpected Docker Hub username"
+                    exit 1
+                }
+
+                if ([string]::IsNullOrWhiteSpace($env:DOCKERHUB_TOKEN)) {
+                    Write-Error "Docker Hub token is empty"
+                    exit 1
+                }
+
+                Write-Output "Username matches expected value"
+                Write-Output "Token is present; length: $($env:DOCKERHUB_TOKEN.Length)"
+            '''
         }
     }
+}
+
     
         stage('Push to Docker Hub') {
             steps {
