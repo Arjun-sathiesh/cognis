@@ -53,6 +53,32 @@ pipeline {
         }
     }
 
+    
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_TOKEN'
+                )]) {
+                    bat '''
+                        echo %DOCKERHUB_TOKEN% | docker login -u %DOCKERHUB_USER% --password-stdin
+                    '''
+
+                    bat '''
+                        docker tag cognis-backend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
+                        docker tag cognis-frontend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
+
+                        docker push %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
+                        docker push %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
+
+                        docker logout
+                    '''
+                }
+            }
+        }
+
+
     post {
 
         success {
