@@ -51,8 +51,20 @@ pipeline {
                 bat 'docker images | findstr cognis'
             }
         }
-    
-
+        stage('Verify Docker Hub Login') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_TOKEN'
+                )]) {
+                bat '''
+                    docker logout
+                    echo %DOCKERHUB_TOKEN% | docker login -u %DOCKERHUB_USER% --password-stdin
+                '''
+            }
+        }
+    }
     
         stage('Push to Docker Hub') {
             steps {
