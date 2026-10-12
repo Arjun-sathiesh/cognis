@@ -58,9 +58,9 @@ pipeline {
                     usernameVariable: 'DOCKERHUB_USER',
                     passwordVariable: 'DOCKERHUB_TOKEN'
                 )]) {
-                bat '''
-                    docker logout
-                    echo %DOCKERHUB_TOKEN% | docker login -u %DOCKERHUB_USER% --password-stdin
+               powershell '''
+                $env:DOCKERHUB_TOKEN | docker login -u $env:DOCKERHUB_USER --password-stdin
+                if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
                 '''
             }
         }
@@ -73,9 +73,10 @@ pipeline {
                     usernameVariable: 'DOCKERHUB_USER',
                     passwordVariable: 'DOCKERHUB_TOKEN'
                 )]) {
-                    bat '''
-                        echo %DOCKERHUB_TOKEN% | docker login -u %DOCKERHUB_USER% --password-stdin
-                    '''
+                   powershell '''
+                $env:DOCKERHUB_TOKEN | docker login -u $env:DOCKERHUB_USER --password-stdin
+                if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+                '''
 
                     bat '''
                         docker tag cognis-backend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
