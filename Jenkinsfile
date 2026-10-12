@@ -1,4 +1,4 @@
-
+```groovy
 pipeline {
     agent any
 
@@ -25,8 +25,13 @@ pipeline {
                 bat '''
                     cd backend
                     python -m pip install -r requirements.txt
+                    if errorlevel 1 exit /b 1
+
                     python -m pytest ../testcases/api/test_extractor.py -v
+                    if errorlevel 1 exit /b 1
+
                     python -m compileall -q .
+                    if errorlevel 1 exit /b 1
                 '''
 
                 echo 'Validating Cognis frontend...'
@@ -34,7 +39,10 @@ pipeline {
                 bat '''
                     cd frontend
                     npm install
+                    if errorlevel 1 exit /b 1
+
                     npm run build
+                    if errorlevel 1 exit /b 1
                 '''
             }
         }
@@ -44,7 +52,6 @@ pipeline {
                 echo "Building Cognis Docker images for Jenkins build #${BUILD_NUMBER}..."
 
                 bat "docker build -t cognis-backend:jenkins-${BUILD_NUMBER} ./backend"
-
                 bat "docker build -t cognis-frontend:jenkins-${BUILD_NUMBER} ./frontend"
 
                 bat 'docker images | findstr cognis'
@@ -78,48 +85,47 @@ pipeline {
             }
         }
 
-        ```groovy
-stage('Push to Docker Hub') {
-    steps {
-        withCredentials([
-            usernamePassword(
-                credentialsId: 'dockerhub-creds-v2',
-                usernameVariable: 'DOCKERHUB_USER',
-                passwordVariable: 'DOCKERHUB_TOKEN'
-            )
-        ]) {
-            try {
-                bat '''
-                    @echo off
-                    echo Authenticating with Docker Hub...
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds-v2',
+                        usernameVariable: 'DOCKERHUB_USER',
+                        passwordVariable: 'DOCKERHUB_TOKEN'
+                    )
+                ]) {
+                    try {
+                        bat '''
+                            @echo off
+                            echo Authenticating with Docker Hub...
 
-                    powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$env:DOCKERHUB_TOKEN | docker login --username $env:DOCKERHUB_USER --password-stdin; if ($LASTEXITCODE -ne 0) { exit 1 }; Write-Output 'Docker Hub authentication succeeded'; exit 0"
+                            powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$env:DOCKERHUB_TOKEN | docker login --username $env:DOCKERHUB_USER --password-stdin; if ($LASTEXITCODE -ne 0) { exit 1 }; Write-Output 'Docker Hub authentication succeeded'; exit 0"
 
-                    if errorlevel 1 exit /b 1
+                            if errorlevel 1 exit /b 1
 
-                    echo Tagging Docker images...
+                            echo Tagging Docker images...
 
-                    docker tag cognis-backend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
-                    if errorlevel 1 exit /b 1
+                            docker tag cognis-backend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
+                            if errorlevel 1 exit /b 1
 
-                    docker tag cognis-frontend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
-                    if errorlevel 1 exit /b 1
+                            docker tag cognis-frontend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
+                            if errorlevel 1 exit /b 1
 
-                    echo Pushing backend image...
-                    docker push %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
-                    if errorlevel 1 exit /b 1
+                            echo Pushing backend image...
+                            docker push %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
+                            if errorlevel 1 exit /b 1
 
-                    echo Pushing frontend image...
-                    docker push %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
-                    if errorlevel 1 exit /b 1
-                '''
-            } finally {
-                bat 'docker logout'
+                            echo Pushing frontend image...
+                            docker push %DOCKERHUB_USER%/cognis-frontend:build-%BUILD_NUMBER%
+                            if errorlevel 1 exit /b 1
+                        '''
+                    } finally {
+                        bat 'docker logout'
+                    }
+                }
             }
         }
     }
-}
-```
 
     post {
         success {
@@ -135,3 +141,4 @@ stage('Push to Docker Hub') {
         }
     }
 }
+```
