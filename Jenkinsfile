@@ -90,19 +90,23 @@ pipeline {
                     script {
                         try {
                             powershell '''
-                                $ErrorActionPreference = "Stop"
+    Write-Output "Docker executable:"
+    (Get-Command docker).Source
 
-                                $env:DOCKERHUB_TOKEN |
-                                    docker login `
-                                        --username $env:DOCKERHUB_USER `
-                                        --password-stdin
+    Write-Output "Credential username:"
+    Write-Output $env:DOCKERHUB_USER
 
-                                if ($LASTEXITCODE -ne 0) {
-                                    throw "Docker Hub login failed with exit code $LASTEXITCODE"
-                                }
+    Write-Output "Attempting registry authentication..."
 
-                                Write-Output "Docker Hub login succeeded"
-                            '''
+    $env:DOCKERHUB_TOKEN |
+        docker login --username $env:DOCKERHUB_USER --password-stdin
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Docker Hub authentication failed"
+    }
+
+    Write-Output "Docker Hub authentication succeeded"
+'''
 
                             bat '''
                                 docker tag cognis-backend:jenkins-%BUILD_NUMBER% %DOCKERHUB_USER%/cognis-backend:build-%BUILD_NUMBER%
