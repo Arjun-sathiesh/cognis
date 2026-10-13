@@ -47,3 +47,7 @@ def test_malformed_extraction_items_validated_safely():
     assert validated[0]["category"] == "architecture"  # unknown_cat mapped safely
     assert validated[0]["title"] == "Test Title"
     assert validated[0]["content"] == "Valid Content"
+
+def test_jenkins_failure_demo():
+    """Temporary test to demonstrate Jenkins failure handling."""
+    assert 1 == 2
